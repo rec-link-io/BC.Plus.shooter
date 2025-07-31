@@ -2,42 +2,49 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-  <title>BCP Tapper</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>BCP Runner</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    body {
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    html, body {
       height: 100%;
       font-family: 'Orbitron', sans-serif;
       background: linear-gradient(to bottom, #0f2027, #203a43, #2c5364);
-      overflow: hidden;
       display: flex;
       justify-content: center;
       align-items: center;
     }
-    #game-container {
-      margin-top: 40px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.45);
-      border-radius: 20px;
-      background: rgba(20, 20, 30, 0.82);
-      padding: 20px;
+    #gameContainer {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      max-width: 400px;
+      height: 100%;
+      max-height: 700px;
       position: relative;
     }
-    .game-canvas {
-      display: block;
-      width: 480px;
-      height: 480px;
-      border-radius: 18px;
-      background: #232743;
+    canvas {
+      width: 100%;
+      height: 100%;
+      max-width: 360px;
+      max-height: 600px;
+      background: radial-gradient(circle, #1b2735 0%, #090a0f 100%);
       border: 3px solid #00ffcc;
       box-shadow: 0 0 30px #00ffcc;
+      border-radius: 15px;
+      touch-action: none;
     }
     .hud {
       position: relative;
       width: 100%;
-      max-width: 480px;
-      margin-bottom: 10px;
+      max-width: 360px;
+      margin: 10px 0;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -52,6 +59,61 @@
     }
     .hud div {
       margin: 0 10px;
+    }
+    #startScreen, #gameOverScreen {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 360px;
+      height: 100%;
+      max-height: 600px;
+      background: rgba(0, 0, 0, 0.9);
+      color: #00ffcc;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-size: 2em;
+      z-index: 15;
+    }
+    #levelUpNotification, #lifeLostNotification, #withdrawNotification, #lifeGainedNotification, #coinBonusNotification {
+      position: absolute;
+      top: 20%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 255, 200, 0.9);
+      padding: 15px 30px;
+      border-radius: 10px;
+      border: 2px solid #00ffcc;
+      color: #1a1a2e;
+      font-size: 1.5em;
+      font-weight: bold;
+      display: none;
+      box-shadow: 0 0 20px rgba(0, 255, 200, 0.5);
+      animation: fadeInOut 2s ease-in-out;
+      z-index: 14;
+    }
+    #lifeLostNotification {
+      background: rgba(255, 68, 68, 0.9);
+      border-color: #ff1744;
+      box-shadow: 0 0 20px rgba(255, 68, 68, 0.5);
+    }
+    #withdrawNotification {
+      background: rgba(255, 215, 0, 0.9);
+      border-color: #ffd700;
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+    }
+    #lifeGainedNotification {
+      background: rgba(0, 255, 0, 0.9);
+      border-color: #00ff00;
+      box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+    }
+    #coinBonusNotification {
+      background: rgba(255, 215, 0, 0.9);
+      border-color: #ffd700;
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
     }
     .btn {
       padding: 10px 20px;
@@ -73,55 +135,33 @@
     .btn:active {
       transform: scale(0.95);
     }
-    #startScreen, #gameOverScreen {
+    .btn:disabled {
+      background: #666;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+      opacity: 0.6;
+    }
+    #strongShootBtn {
       position: absolute;
-      top: 0;
+      bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
-      width: 100%;
-      max-width: 480px;
-      height: 100%;
-      max-height: 480px;
-      background: rgba(0, 0, 0, 0.9);
-      color: #00ffcc;
+      width: 60px;
+      height: 60px;
+      font-size: 0.9em;
+      border-radius: 8px;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      font-size: 2em;
-      z-index: 15;
+      padding: 5px;
+      line-height: 1.2;
     }
-    #notification, #withdrawNotification, #coinBonusNotification {
-      position: absolute;
-      top: 20%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(0, 255, 200, 0.9);
-      padding: 15px 30px;
-      border-radius: 10px;
-      border: 2px solid #00ffcc;
-      color: #1a1a2e;
-      font-size: 1.5em;
-      font-weight: bold;
-      display: none;
-      box-shadow: 0 0 20px rgba(0, 255, 200, 0.5);
-      animation: fadeInOut 2s ease-in-out;
-      z-index: 14;
-    }
-    #withdrawNotification, #coinBonusNotification {
-      background: rgba(255, 215, 0, 0.9);
-      border-color: #ffd700;
-      box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
-    }
-    .tap-feedback {
-      position: absolute;
+    #strongShootBtn span {
+      font-size: 0.7em;
       color: #00ffcc;
-      font-size: 1.2em;
-      font-weight: bold;
-      text-shadow: 0 0 10px #00ffcc;
-      pointer-events: none;
-      animation: fadePop 1s ease-out forwards;
-      z-index: 13;
+      text-shadow: 0 0 5px #00ffcc;
     }
     @keyframes fadeInOut {
       0% { opacity: 0; transform: translate(-50%, -70%) scale(0.8); }
@@ -129,34 +169,36 @@
       90% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
       100% { opacity: 0; transform: translate(-50%, -30%) scale(0.8); }
     }
-    @keyframes fadePop {
-      0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-      100% { opacity: 0; transform: translate(-50%, -150%) scale(1.3); }
+    @keyframes explode {
+      0% { opacity: 1; transform: scale(0); }
+      100% { opacity: 0; transform: scale(2); }
     }
     @media (max-width: 600px) {
-      .game-canvas {
-        width: 98vw;
-        height: 98vw;
-      }
-      #game-container {
-        padding: 3vw;
+      canvas {
+        max-width: 90vw;
+        max-height: 80vh;
       }
       .hud {
-        max-width: 98vw;
+        max-width: 90vw;
         font-size: 14px;
         padding: 8px;
       }
       #startScreen, #gameOverScreen {
-        max-width: 98vw;
-        max-height: 98vw;
+        max-width: 90vw;
+        max-height: 80vh;
         font-size: 1.5em;
       }
-      #notification, #withdrawNotification, #coinBonusNotification {
+      #levelUpNotification, #lifeLostNotification, #withdrawNotification, #lifeGainedNotification, #coinBonusNotification {
         font-size: 1.2em;
         padding: 10px 20px;
       }
-      .tap-feedback {
-        font-size: 1em;
+      #strongShootBtn {
+        width: 50px;
+        height: 50px;
+        font-size: 0.8em;
+      }
+      #strongShootBtn span {
+        font-size: 0.6em;
       }
     }
     .flash-loader {
@@ -186,7 +228,6 @@
       min-width: 160px;
       min-height: 160px;
     }
-    
     @keyframes flash-logo-glow {
       0% {
         filter: brightness(0.8) blur(0px);
@@ -216,7 +257,7 @@
       opacity: 0.8;
     }
     @keyframes spin {
-      to { transform: rotate(360deg);}
+      to { transform: rotate(360deg); }
     }
     .flash-loader-text {
       color: #fff;
@@ -227,28 +268,28 @@
       text-shadow: 0 2px 8px #25EE8880;
     }
     @media (max-width: 600px) {
-      .flash-loader-img { width: 85vw; height: 85vw; min-width: 80px; min-height: 80px; max-width: 90vw; max-height: 90vw;}
-      .flash-loader-imgbox { min-width: 90px; min-height: 90px;}
-      .flash-loader-text { font-size: 1.07rem;}
-      .flash-loader-spinner { width: 26px; height: 26px; border-width: 3px;}
+      .flash-loader-img { width: 85vw; height: 85vw; min-width: 80px; min-height: 80px; max-width: 90vw; max-height: 90vw; }
+      .flash-loader-imgbox { min-width: 90px; min-height: 90px; }
+      .flash-loader-text { font-size: 1.07rem; }
+      .flash-loader-spinner { width: 26px; height: 26px; border-width: 3px; }
     }
-
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.156.1/build/three.min.js"></script>
 </head>
-<body ontouchstart="handleTouch(event)">
+<body>
   <div id="flash-loader" class="flash-loader">
-  <div class="flash-loader-imgbox">
-    <img class="flash-loader-img" src="https://raw.githubusercontent.com/rec-link-io/BC.Plus/7ecc35e2dbc9c4ac5ebb3ea94c10bbb536104b7f/assets/BCPlus%20logo.gif" alt="Loading BC.Plus...">
+    <div class="flash-loader-imgbox">
+      <img class="flash-loader-img" src="https://raw.githubusercontent.com/rec-link-io/BC.Plus/7ecc35e2dbc9c4ac5ebb3ea94c10bbb536104b7f/assets/BCPlus%20logo.gif" alt="Loading BC.Plus...">
+    </div>
+    <div class="flash-loader-spinner"></div>
+    <div class="flash-loader-text"></div>
   </div>
-  <div class="flash-loader-spinner"></div>
-  <div class="flash-loader-text"></div>
-</div>
-  <div id="game-container">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+  <div id="gameContainer">
     <div class="hud">
       <div>💎 BCP Wallet: <span id="coinCounter">0</span></div>
       <div>🎯 Score: <span id="score">0</span></div>
-      <div>🍎 Apples: <span id="appleCount">0</span></div>
+      <div>🔥 Level: <span id="level">1</span></div>
+      <div>❤️ Lives: <span id="lives">500</span></div>
       <div>
         <button class="btn" id="pauseBtn"><i class="fas fa-pause"></i></button>
         <button class="btn" id="soundBtn"><i class="fas fa-volume-up"></i></button>
@@ -256,350 +297,623 @@
       </div>
     </div>
     <div id="startScreen">
-      <h1>🎮 BCP Tapper</h1>
-      <p>Collect apples to earn BCP coins!</p>
-      <button class="btn" onclick="startGame()">Start Game</button>
+      <h1>🎮 BCP Runner</h1>
+      <button class="btn" id="startBtn">Start Game</button>
     </div>
     <div id="gameOverScreen" style="display:none;">
       <h1>💀 Game Over</h1>
       <p>Score: <span id="finalScore">0</span></p>
       <p>High Score: <span id="highScore">0</span></p>
       <p>BCP Wallet: <span id="finalWallet">0</span></p>
-      <button class="btn" onclick="restartGame()">Restart</button>
+      <button class="btn" id="restartBtn">Restart</button>
     </div>
-    <div id="notification">Collect apples to earn BCP!</div>
+    <div id="levelUpNotification">Level Up!</div>
+    <div id="lifeLostNotification">Life Lost!</div>
     <div id="withdrawNotification">BCP Withdraw Coming Soon</div>
+    <div id="lifeGainedNotification">Life Gained!</div>
     <div id="coinBonusNotification">+200 BCP Coins!</div>
-    <canvas id="gc" class="game-canvas"></canvas>
+    <button class="btn" id="strongShootBtn" disabled><i class="fas fa-bomb"></i><span>Kills: 0/50</span></button>
+    <canvas id="gameCanvas" width="360" height="600"></canvas>
   </div>
 
   <script>
-    const GRID_SIZE = 16;
-    const TICK_MS = 220;
+    window.onload = function() {
+      const canvas = document.getElementById('gameCanvas');
+      const ctx = canvas.getContext('2d');
+      const coinCounter = document.getElementById('coinCounter');
+      const scoreDisplay = document.getElementById('score');
+      const levelDisplay = document.getElementById('level');
+      const livesDisplay = document.getElementById('lives');
+      const highScoreDisplay = document.getElementById('highScore');
+      const finalScoreDisplay = document.getElementById('finalScore');
+      const finalWalletDisplay = document.getElementById('finalWallet');
+      const pauseBtn = document.getElementById('pauseBtn');
+      const soundBtn = document.getElementById('soundBtn');
+      const withdrawBtn = document.getElementById('withdrawBtn');
+      const strongShootBtn = document.getElementById('strongShootBtn');
+      const startBtn = document.getElementById('startBtn');
+      const restartBtn = document.getElementById('restartBtn');
+      const flashLoader = document.getElementById('flash-loader');
 
-    let snake, apple, direction, pendingDirection, gameOver, score = 0, appleCount = 0;
-    let scene, camera, renderer, snakeMesh, appleMesh, boardMesh, lastTick = 0;
-    let wallet = parseFloat(localStorage.getItem('bcpWallet')) || 0;
-    let highScore = parseInt(localStorage.getItem('highScore')) || 0;
-    let paused = false;
-    let soundOn = true;
-    let tapFeedbacks = [];
-    let touchStartX = 0, touchStartY = 0;
+      let player = { x: 300, y: 600, width: 40, height: 40, speed: 7, isHit: false, hitEffectDuration: 0, angle: 0 };
+      let coins = [];
+      let livesItems = [];
+      let enemies = [];
+      let bullets = [];
+      let enemyBullets = [];
+      let particles = [];
+      let explosions = [];
+      let keys = {};
+      let score = 0;
+      let wallet = parseInt(localStorage.getItem('bcpWallet')) || 0;
+      let level = 1;
+      let lives = 500;
+      let enemiesKilled = 0;
+      let strongBullets = 0;
+      let paused = false;
+      let highScore = parseInt(localStorage.getItem('highScore')) || 0;
+      let soundOn = true;
+      let animationId;
+      let maxEnemies = 100;
+      let maxBullets = 300;
+      let canSpawnEnemies = true;
 
-    const gameContainer = document.getElementById('game-container');
-    const coinCounter = document.getElementById('coinCounter');
-    const scoreDisplay = document.getElementById('score');
-    const appleCountDisplay = document.getElementById('appleCount');
-    const pauseBtn = document.getElementById('pauseBtn');
-    const soundBtn = document.getElementById('soundBtn');
-    const withdrawBtn = document.getElementById('withdrawBtn');
-    const startScreen = document.getElementById('startScreen');
-    const gameOverScreen = document.getElementById('gameOverScreen');
-    const notification = document.getElementById('notification');
-    const withdrawNotification = document.getElementById('withdrawNotification');
-    const coinBonusNotification = document.getElementById('coinBonusNotification');
-    const canvas = document.getElementById('gc');
+      const coinImage = new Image();
+      coinImage.src = 'https://cdn-icons-png.flaticon.com/512/825/825527.png';
+      const lifeImage = new Image();
+      lifeImage.src = 'https://cdn-icons-png.flaticon.com/512/2589/2589976.png';
+      const shootSound = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
+      const coinSound = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
+      const lifeSound = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
 
-    const tapSound = new Audio('https://cdn.pixabay.com/audio/2022/03/15/audio_c9e5d6b64b.mp3');
+      coinCounter.textContent = wallet;
+      highScoreDisplay.textContent = highScore;
+      livesDisplay.textContent = lives;
+      strongShootBtn.querySelector('span').textContent = `Kills: ${enemiesKilled}/50`;
 
-    coinCounter.textContent = wallet.toFixed(2);
-    scoreDisplay.textContent = score;
-    appleCountDisplay.textContent = appleCount;
-
-    pauseBtn.addEventListener('click', togglePause);
-    soundBtn.addEventListener('click', toggleSound);
-    withdrawBtn.addEventListener('click', showWithdrawNotification);
-
-    // Swipe controls
-    canvas.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      touchStartX = e.touches[0].clientX;
-      touchStartY = e.touches[0].clientY;
-    });
-
-    canvas.addEventListener('touchend', (e) => {
-      e.preventDefault();
-      const touchEndX = e.changedTouches[0].clientX;
-      const touchEndY = e.changedTouches[0].clientY;
-      const deltaX = touchEndX - touchStartX;
-      const deltaY = touchEndY - touchStartY;
-      const threshold = 50; // Minimum swipe distance
-
-      if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > threshold) {
-        if (deltaX > 0) Snake.action('right');
-        else Snake.action('left');
-      } else if (Math.abs(deltaY) > threshold) {
-        if (deltaY > 0) Snake.action('down');
-        else Snake.action('up');
-      }
-    });
-
-    function resetGame() {
-      snake = [{x: 8, y: 8}];
-      direction = {x: 1, y: 0};
-      pendingDirection = null;
-      apple = spawnApple();
-      gameOver = false;
-      paused = false;
-      score = 0;
-      appleCount = 0;
-      updateSnakeMesh();
-      updateAppleMesh();
-      updateHUD();
-      gameOverScreen.style.display = 'none';
-      notification.style.display = 'none';
-      withdrawNotification.style.display = 'none';
-      coinBonusNotification.style.display = 'none';
-    }
-
-    function spawnApple() {
-      let pos;
-      do {
-        pos = {
-          x: Math.floor(Math.random() * GRID_SIZE),
-          y: Math.floor(Math.random() * GRID_SIZE)
-        };
-      } while (snake.some(seg => seg.x === pos.x && seg.y === pos.y));
-      return pos;
-    }
-
-    function setup3D() {
-      scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x195c2a);
-      camera = new THREE.PerspectiveCamera(60, 1, 0.1, 1000);
-      camera.position.set(GRID_SIZE / 2, 14, GRID_SIZE * 1.5);
-      camera.lookAt(new THREE.Vector3(GRID_SIZE / 2, 0, GRID_SIZE / 2));
-
-      scene.add(new THREE.AmbientLight(0xaaaaee, 0.8));
-      const dir = new THREE.DirectionalLight(0xfafaff, 0.8);
-      dir.position.set(20, 20, 10);
-      scene.add(dir);
-
-      const boardGeo = new THREE.BoxGeometry(GRID_SIZE, 0.5, GRID_SIZE);
-      const boardMat = new THREE.MeshStandardMaterial({ color: 0x232743 });
-      boardMesh = new THREE.Mesh(boardGeo, boardMat);
-      boardMesh.position.set(GRID_SIZE / 2 - 0.5, -0.3, GRID_SIZE / 2 - 0.5);
-      scene.add(boardMesh);
-
-      const snakeGeo = new THREE.BoxGeometry(1, 1, 1);
-      const snakeMat = new THREE.MeshStandardMaterial({ color: 0x11e8b1 });
-      snakeMesh = Array.from({length: 32}, () => {
-        const seg = new THREE.Mesh(snakeGeo, snakeMat.clone());
-        scene.add(seg);
-        return seg;
-      });
-
-      const appleGeo = new THREE.SphereGeometry(0.48, 26, 18);
-      const appleMat = new THREE.MeshStandardMaterial({ color: 0xf7454e });
-      appleMesh = new THREE.Mesh(appleGeo, appleMat);
-      scene.add(appleMesh);
-
-      renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('gc'), antialias: true });
-      renderer.setSize(480, 480, false);
-      renderer.setPixelRatio(window.devicePixelRatio);
-      window.addEventListener('resize', () => {
-        const size = Math.min(window.innerWidth, window.innerHeight, 520);
-        renderer.setSize(size, size, false);
-        camera.aspect = 1;
-        camera.updateProjectionMatrix();
-      });
-    }
-
-    function updateSnakeMesh() {
-      snakeMesh.forEach((seg, i) => {
-        if (i < snake.length) {
-          seg.visible = true;
-          seg.position.set(snake[i].x, 0.5, snake[i].y);
-          seg.material.color.set(i === 0 ? 0x1ee8b1 : 0x11e8b1);
-          seg.scale.set(i === 0 ? 1.1 : 1, 1, i === 0 ? 1.1 : 1);
-        } else seg.visible = false;
-      });
-    }
-
-    function updateAppleMesh() {
-      appleMesh.position.set(apple.x, 0.5, apple.y);
-    }
-
-    function moveSnake() {
-      const head = { x: snake[0].x + direction.x, y: snake[0].y + direction.y };
-      if (head.x < 0 || head.x >= GRID_SIZE || head.y < 0 || head.y >= GRID_SIZE ||
-          snake.some(seg => seg.x === head.x && seg.y === head.y)) {
-        gameOver = true;
-        showGameOver();
-        return;
-      }
-      snake.unshift(head);
-      if (head.x === apple.x && head.y === apple.y) {
-        appleCount++;
-        score++;
-        wallet += 0.01;
-        localStorage.setItem('bcpWallet', wallet.toFixed(2));
-        if (appleCount >= 20) {
-          wallet += 200;
-          localStorage.setItem('bcpWallet', wallet.toFixed(2));
-          appleCount -= 20;
-          showCoinBonus();
+      startBtn.addEventListener('click', startGame);
+      restartBtn.addEventListener('click', restartGame);
+      document.addEventListener('keydown', (e) => keys[e.key] = true);
+      document.addEventListener('keyup', (e) => keys[e.key] = false);
+      canvas.addEventListener('touchmove', handleTouch, { passive: false });
+      strongShootBtn.addEventListener('click', () => {
+        if (strongBullets > 0 && !strongShootBtn.disabled) {
+          console.log('Bomb button clicked, clearing enemies');
+          shoot('strong');
         }
-        const feedback = document.createElement('div');
-        feedback.className = 'tap-feedback';
-        feedback.innerText = '+0.01';
-        const canvasRect = document.getElementById('gc').getBoundingClientRect();
-        const containerRect = gameContainer.getBoundingClientRect();
-        const x = canvasRect.left + (apple.x / GRID_SIZE) * canvasRect.width - containerRect.left;
-        const y = canvasRect.top + (apple.y / GRID_SIZE) * canvasRect.height - containerRect.top;
-        feedback.style.left = `${x}px`;
-        feedback.style.top = `${y}px`;
-        gameContainer.appendChild(feedback);
-        tapFeedbacks.push({ element: feedback, time: 1000 });
-        apple = spawnApple();
-        updateAppleMesh();
-        if (soundOn) {
-          tapSound.currentTime = 0;
-          tapSound.play().catch(() => {});
-        }
-      } else {
-        snake.pop();
-      }
-      updateSnakeMesh();
-      updateHUD();
-    }
+      });
+      pauseBtn.addEventListener('click', togglePause);
+      soundBtn.addEventListener('click', toggleSound);
+      withdrawBtn.addEventListener('click', showWithdrawNotification);
 
-    function togglePause() {
-      paused = !paused;
-      pauseBtn.innerHTML = paused ? '<i class="fas fa-play"></i>' : '<i class="fas fa-pause"></i>';
-      if (!paused && !gameOver) animate(performance.now());
-    }
-
-    function toggleSound() {
-      soundOn = !soundOn;
-      soundBtn.innerHTML = soundOn ? '<i class="fas fa-volume-up"></i>' : '<i class="fas fa-volume-mute"></i>';
-    }
-
-    function showWithdrawNotification() {
-      withdrawNotification.style.display = 'block';
       setTimeout(() => {
-        withdrawNotification.style.display = 'none';
-      }, 2000);
-    }
-
-    function showCoinBonus() {
-      coinBonusNotification.innerText = `+200 BCP Coins!`;
-      coinBonusNotification.style.display = 'block';
-      setTimeout(() => {
-        coinBonusNotification.style.display = 'none';
-      }, 2000);
-    }
-
-    function showNotification(message) {
-      notification.innerText = message;
-      notification.style.display = 'block';
-      setTimeout(() => {
-        notification.style.display = 'none';
-      }, 2000);
-    }
-
-    function startGame() {
-      startScreen.style.display = 'none';
-      resetGame();
-      animate(performance.now());
-      showNotification('Collect apples to earn BCP!');
-    }
-
-    function showGameOver() {
-      if (score > highScore) {
-        highScore = score;
-        localStorage.setItem('highScore', highScore);
-      }
-      gameOverScreen.style.display = 'flex';
-      document.getElementById('finalScore').textContent = score;
-      document.getElementById('highScore').textContent = highScore;
-      document.getElementById('finalWallet').textContent = wallet.toFixed(2);
-    }
-
-    function restartGame() {
-      resetGame();
-      gameOverScreen.style.display = 'none';
-      animate(performance.now());
-    }
-
-    function handleTouch(e) {
-      if (gameOver && e.type === 'touchstart') {
-        restartGame();
-      }
-    }
-
-    function animate(now) {
-      if (paused || gameOver) return renderer.render(scene, camera);
-      requestAnimationFrame(animate);
-      if (!lastTick) lastTick = now;
-      if (now - lastTick > TICK_MS) {
-        if (pendingDirection) {
-          setDirection(pendingDirection);
-          pendingDirection = null;
-        }
-        moveSnake();
-        lastTick = now;
-      }
-      tapFeedbacks = tapFeedbacks.filter(f => {
-        f.time -= 16.67;
-        if (f.time <= 0) {
-          f.element.remove();
-          return false;
-        }
-        return true;
-      });
-      renderer.render(scene, camera);
-    }
-
-    function setDirection(dir) {
-      if ((dir.x && dir.x === -direction.x) || (dir.y && dir.y === -direction.y)) return;
-      direction = dir;
-    }
-
-    function updateHUD() {
-      coinCounter.textContent = wallet.toFixed(2);
-      scoreDisplay.textContent = score;
-      appleCountDisplay.textContent = appleCount;
-    }
-
-    window.Snake = {
-      action(dir) {
-        const dirs = {
-          up: {x: 0, y: -1},
-          down: {x: 0, y: 1},
-          left: {x: -1, y: 0},
-          right: {x: 1, y: 0}
-        };
-        pendingDirection = dirs[dir];
-      }
-    };
-    // --- Loader ---
-    window.addEventListener('DOMContentLoaded', function() {
-      document.body.classList.add('overflow-hidden');
-    });
-    window.addEventListener('load', function() {
-      setTimeout(function() {
-        const loader = document.getElementById('flash-loader');
-        if(loader) loader.classList.add('hide');
+        if (flashLoader) flashLoader.classList.add('hide');
         document.body.classList.remove('overflow-hidden');
       }, 1200);
-    });
-    function scrollToTop() {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
 
-    // --- Image fade ---
-    const fadeImages = document.querySelectorAll('#bcplus-image-fade-section img');
-    let fadeIdx = 0;
-    setInterval(() => {
-      fadeImages[fadeIdx].classList.remove('active');
-      fadeIdx = (fadeIdx + 1) % fadeImages.length;
-      fadeImages[fadeIdx].classList.add('active');
-    }, 3000);
+      function startGame() {
+        startScreen.style.display = 'none';
+        resetGame();
+        requestAnimationFrame(update);
+        spawnEnemyWave();
+        setInterval(() => {
+          if (!paused && gameOverScreen.style.display !== 'flex' && bullets.length < maxBullets) {
+            shoot('normal');
+          }
+        }, 300);
+      }
 
+      function resetGame() {
+        player.x = 160;
+        player.y = 300;
+        player.isHit = false;
+        player.hitEffectDuration = 0;
+        player.angle = 0;
+        coins = [];
+        livesItems = [];
+        enemies = [];
+        bullets = [];
+        enemyBullets = [];
+        particles = [];
+        explosions = [];
+        score = 0;
+        level = 1;
+        lives = 500;
+        enemiesKilled = 0;
+        strongBullets = 0;
+        paused = false;
+        canSpawnEnemies = true;
+        gameOverScreen.style.display = 'none';
+        levelUpNotification.style.display = 'none';
+        lifeLostNotification.style.display = 'none';
+        withdrawNotification.style.display = 'none';
+        lifeGainedNotification.style.display = 'none';
+        coinBonusNotification.style.display = 'none';
+        strongShootBtn.style.display = 'block';
+        strongShootBtn.disabled = true;
+        strongShootBtn.querySelector('span').textContent = `Kills: ${enemiesKilled}/50`;
+        updateHUD();
+      }
 
-    setup3D();
-    resetGame();
+      function restartGame() {
+        resetGame();
+        requestAnimationFrame(update);
+        spawnEnemyWave();
+      }
+
+      function togglePause() {
+        paused = !paused;
+        pauseBtn.innerHTML = paused ? '<i class="fas fa-play"></i>' : '<i class="fas fa-pause"></i>';
+        if (!paused && gameOverScreen.style.display !== 'flex') requestAnimationFrame(update);
+      }
+
+      function toggleSound() {
+        soundOn = !soundOn;
+        soundBtn.innerHTML = soundOn ? '<i class="fas fa-volume-up"></i>' : '<i class="fas fa-volume-mute"></i>';
+      }
+
+      function showWithdrawNotification() {
+        withdrawNotification.style.display = 'block';
+        setTimeout(() => {
+          withdrawNotification.style.display = 'none';
+        }, 2000);
+      }
+
+      function handleTouch(e) {
+        e.preventDefault();
+        const touch = e.touches[0];
+        const rect = canvas.getBoundingClientRect();
+        const touchX = touch.clientX - rect.left;
+        const touchY = touch.clientY - rect.top;
+        const dx = touchX - (player.x + player.width / 2);
+        const dy = touchY - (player.y + player.height / 2);
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        if (distance > 5) {
+          player.x += (dx / distance) * player.speed;
+          player.y += (dy / distance) * player.speed;
+          player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+          player.y = Math.max(0, Math.min(canvas.height - player.height, player.y));
+          player.angle = Math.atan2(dy, dx);
+        }
+      }
+
+      function spawnEnemyWave() {
+        if (paused || gameOverScreen.style.display === 'flex' || !canSpawnEnemies) return;
+        maxEnemies = 100 + level * 20;
+        if (enemies.length >= maxEnemies) return;
+
+        const enemiesToSpawn = Math.min(Math.floor(Math.random() * (3 + level)) + 1, 10);
+        const enemiesToSpawnLimited = Math.min(enemiesToSpawn, maxEnemies - enemies.length);
+        for (let i = 0; i < enemiesToSpawnLimited; i++) {
+          const side = Math.floor(Math.random() * 4);
+          let x, y, vx, vy;
+          if (side === 0) {
+            x = Math.random() * canvas.width;
+            y = -30;
+            vx = Math.random() * 2 - 1;
+            vy = 3;
+          } else if (side === 1) {
+            x = Math.random() * canvas.width;
+            y = canvas.height + 30;
+            vx = Math.random() * 2 - 1;
+            vy = -3;
+          } else if (side === 2) {
+            x = -30;
+            y = Math.random() * canvas.height;
+            vx = 3;
+            vy = Math.random() * 2 - 1;
+          } else {
+            x = canvas.width + 30;
+            y = Math.random() * canvas.height;
+            vx = -3;
+            vy = Math.random() * 2 - 1;
+          }
+          enemies.push({ x, y, size: 30 + Math.random() * 20, vx, vy, angle: 0 });
+        }
+        setTimeout(spawnEnemyWave, Math.random() * 2000 + 1000);
+      }
+
+      function spawnCoin() {
+        if (coins.length >= 5) return;
+        coins.push({ x: Math.random() * (canvas.width - 20), y: -30 });
+      }
+
+      function spawnLife() {
+        if (livesItems.length >= 2) return;
+        livesItems.push({ x: Math.random() * (canvas.width - 20), y: -30 });
+      }
+
+      function spawnParticles(x, y) {
+        const particleCount = 5 + Math.floor(Math.random() * 5);
+        for (let i = 0; i < particleCount; i++) {
+          particles.push({
+            x: x,
+            y: y,
+            vx: (Math.random() - 0.5) * 6,
+            vy: (Math.random() - 0.5) * 6,
+            size: 3 + Math.random() * 3,
+            life: 1000,
+            color: `hsl(${Math.random() * 60 + 180}, 100%, 50%)`
+          });
+        }
+      }
+
+      function shoot(type) {
+        if (type === 'normal' && bullets.length < maxBullets) {
+          const angles = [player.angle - 0.87, player.angle, player.angle + 0.87];
+          angles.forEach(angle => {
+            const dx = Math.cos(angle);
+            const dy = Math.sin(angle);
+            bullets.push({ x: player.x + player.width / 2, y: player.y + player.height / 2, vx: dx * 10, vy: dy * 10, type: 'normal', trail: [] });
+          });
+          if (soundOn) {
+            shootSound.currentTime = 0;
+            shootSound.play().catch(() => {});
+          }
+        } else if (type === 'strong' && strongBullets > 0) {
+          console.log('Strong shoot activated, enemies before:', enemies.length);
+          enemies = [];
+          console.log('Enemies after:', enemies.length);
+          shakeScreen();
+          explosions.push({ x: canvas.width / 2, y: canvas.height / 2, radius: 0, life: 1000 });
+          strongBullets--;
+          enemiesKilled = 0;
+          strongShootBtn.disabled = true;
+          strongShootBtn.querySelector('span').textContent = `Kills: ${enemiesKilled}/50`;
+          canSpawnEnemies = false;
+          setTimeout(() => {
+            canSpawnEnemies = true;
+            spawnEnemyWave();
+          }, 1000);
+          if (soundOn) {
+            shootSound.currentTime = 0;
+            shootSound.play().catch(() => {});
+          }
+        }
+      }
+
+      function shakeScreen() {
+        const intensity = 10;
+        let count = 0;
+        const interval = setInterval(() => {
+          count++;
+          if (count > 10) {
+            canvas.style.transform = '';
+            clearInterval(interval);
+          } else {
+            const x = (Math.random() - 0.5) * intensity;
+            const y = (Math.random() - 0.5) * intensity;
+            canvas.style.transform = `translate(${x}px, ${y}px)`;
+          }
+        }, 50);
+      }
+
+      function enemyShoot(enemy) {
+        const dx = (player.x + player.width / 2) - (enemy.x + enemy.size / 2);
+        const dy = (player.y + player.height / 2) - (enemy.y + e.size / 2);
+        const angle = Math.atan2(dy, dx);
+        enemyBullets.push({
+          x: enemy.x + enemy.size / 2,
+          y: enemy.y + enemy.size / 2,
+          vx: Math.cos(angle) * 2,
+          vy: Math.sin(angle) * 2
+        });
+      }
+
+      function showLevelUp() {
+        levelUpNotification.innerText = `Level Up! Level ${level}`;
+        levelUpNotification.style.display = 'block';
+        setTimeout(() => {
+          levelUpNotification.style.display = 'none';
+        }, 2000);
+      }
+
+      function showLifeLost() {
+        lifeLostNotification.innerText = `Life Lost! ${lives} Left`;
+        lifeLostNotification.style.display = 'block';
+        setTimeout(() => {
+          lifeLostNotification.style.display = 'none';
+        }, 2000);
+      }
+
+      function showLifeGained() {
+        lifeGainedNotification.innerText = `Life Gained! ${lives} Lives`;
+        lifeGainedNotification.style.display = 'block';
+        setTimeout(() => {
+          lifeGainedNotification.style.display = 'none';
+        }, 800);
+      }
+
+      function showCoinBonus() {
+        coinBonusNotification.innerText = `+200 BCP Coins!`;
+        coinBonusNotification.style.display = 'block';
+        setTimeout(() => {
+          coinBonusNotification.style.display = 'none';
+        }, 2000);
+      }
+
+      function update() {
+        if (paused || gameOverScreen.style.display === 'flex') return;
+        animationId = requestAnimationFrame(update);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if (player.isHit) {
+          player.hitEffectDuration -= 16.67;
+          if (player.hitEffectDuration <= 0) {
+            player.isHit = false;
+          }
+        }
+        updatePlayer();
+        updateBullets();
+        updateEnemyBullets();
+        updateEnemies();
+        updateCoins();
+        updateLives();
+        updateParticles();
+        updateExplosions();
+        drawPlayer();
+        checkLevelUp();
+      }
+
+      function updatePlayer() {
+        let dx = 0, dy = 0;
+        if (keys['ArrowLeft']) dx -= player.speed;
+        if (keys['ArrowRight']) dx += player.speed;
+        if (keys['ArrowUp']) dy -= player.speed;
+        if (keys['ArrowDown']) dy += player.speed;
+        if (dx !== 0 || dy !== 0) {
+          player.x += dx;
+          player.y += dy;
+          player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+          player.y = Math.max(0, Math.min(canvas.height - player.height, player.y));
+          player.angle = Math.atan2(dy, dx);
+        }
+      }
+
+      function drawPlayer() {
+        ctx.save();
+        ctx.translate(player.x + player.width / 2, player.y + player.height / 2);
+        ctx.rotate(player.angle + Math.PI / 2);
+        if (player.isHit) {
+          ctx.fillStyle = 'red';
+          ctx.shadowColor = 'red';
+          ctx.shadowBlur = 20;
+        } else {
+          const gradient = ctx.createLinearGradient(0, -player.height / 2, 0, player.height / 2);
+          gradient.addColorStop(0, '#00d4ff');
+          gradient.addColorStop(1, '#00ff88');
+          ctx.fillStyle = gradient;
+          ctx.shadowColor = '#00ffcc';
+          ctx.shadowBlur = 15;
+        }
+        ctx.beginPath();
+        ctx.moveTo(0, -player.height / 2);
+        ctx.lineTo(player.width / 2, player.height / 2);
+        ctx.lineTo(-player.width / 2, player.height / 2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.restore();
+      }
+
+      function updateBullets() {
+        bullets.forEach((b, i) => {
+          b.x += b.vx;
+          b.y += b.vy;
+          b.trail.push({ x: b.x, y: b.y });
+          if (b.trail.length > 5) b.trail.shift();
+          ctx.beginPath();
+          ctx.strokeStyle = 'rgba(0, 255, 255, 0.5)';
+          ctx.lineWidth = 2;
+          b.trail.forEach((t, j) => {
+            if (j === 0) ctx.moveTo(t.x, t.y);
+            else ctx.lineTo(t.x, t.y);
+          });
+          ctx.stroke();
+          ctx.fillStyle = '#fff';
+          ctx.shadowColor = '#00ffff';
+          ctx.shadowBlur = 20;
+          ctx.beginPath();
+          ctx.arc(b.x, b.y, 5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+          enemies.forEach((e, j) => {
+            if (Math.hypot(b.x - (e.x + e.size / 2), b.y - (e.y + e.size / 2)) < e.size / 2 + 5) {
+              bullets.splice(i, 1);
+              enemies.splice(j, 1);
+              spawnParticles(e.x + e.size / 2, e.y + e.size / 2);
+              score += 10;
+              enemiesKilled++;
+              console.log('Enemy killed, total:', enemiesKilled);
+              strongShootBtn.querySelector('span').textContent = `Kills: ${enemiesKilled}/50`;
+              if (enemiesKilled >= 50) {
+                strongBullets++;
+                enemiesKilled = 0;
+                strongShootBtn.disabled = false;
+                strongShootBtn.querySelector('span').textContent = `Kills: ${enemiesKilled}/50`;
+                console.log('Bomb enabled, strongBullets:', strongBullets);
+              }
+              updateHUD();
+            }
+          });
+          if (b.x < 0 || b.x > canvas.width || b.y < 0 || b.y > canvas.height) bullets.splice(i, 1);
+        });
+      }
+
+      function updateEnemyBullets() {
+        enemyBullets.forEach((b, i) => {
+          b.x += b.vx;
+          b.y += b.vy;
+          ctx.fillStyle = '#ff4444';
+          ctx.shadowColor = '#ff4444';
+          ctx.shadowBlur = 10;
+          ctx.beginPath();
+          ctx.arc(b.x, b.y, 5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+          if (
+            Math.hypot(b.x - (player.x + player.width / 2), b.y - (player.y + player.height / 2)) < player.width / 2 + 5
+          ) {
+            enemyBullets.splice(i, 1);
+            lives--;
+            player.isHit = true;
+            player.hitEffectDuration = 500;
+            showLifeLost();
+            if (lives <= 0) endGame();
+            updateHUD();
+          }
+          if (b.x < 0 || b.x > canvas.width || b.y < 0 || b.y > canvas.height) enemyBullets.splice(i, 1);
+        });
+      }
+
+      function updateEnemies() {
+        enemies.forEach((e, i) => {
+          e.x += e.vx;
+          e.y += e.vy;
+          const dx = (player.x + player.width / 2) - (e.x + e.size / 2);
+          const dy = (player.y + player.height / 2) - (e.y + e.size / 2);
+          e.angle = Math.atan2(dy, dx);
+          if (Math.random() < 0.01) enemyShoot(e);
+          ctx.save();
+          ctx.translate(e.x + e.size / 2, e.y + e.size / 2);
+          ctx.rotate(e.angle + Math.PI / 2);
+          const gradient = ctx.createLinearGradient(0, -e.size / 2, 0, e.size / 2);
+          gradient.addColorStop(0, '#ff1744');
+          gradient.addColorStop(1, '#b71c1c');
+          ctx.fillStyle = gradient;
+          ctx.shadowColor = '#ff1744';
+          ctx.shadowBlur = 10;
+          ctx.beginPath();
+          ctx.arc(0, 0, e.size / 2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+          ctx.restore();
+          if (e.x < -e.size || e.x > canvas.width + e.size || e.y < -e.size || e.y > canvas.height + e.size) {
+            enemies.splice(i, 1);
+          }
+          if (
+            Math.hypot(e.x + e.size / 2 - (player.x + player.width / 2), e.y + e.size / 2 - (player.y + player.height / 2)) < e.size / 2 + player.width / 2
+          ) {
+            lives--;
+            enemies.splice(i, 1);
+            spawnParticles(e.x + e.size / 2, e.y + e.size / 2);
+            player.isHit = true;
+            player.hitEffectDuration = 500;
+            showLifeLost();
+            if (lives <= 0) endGame();
+            updateHUD();
+          }
+        });
+      }
+
+      function updateCoins() {
+        coins.forEach((c, i) => {
+          c.y += 2;
+          ctx.shadowColor = '#ffd700';
+          ctx.shadowBlur = 10;
+          ctx.drawImage(coinImage, c.x, c.y, 20, 20);
+          ctx.shadowBlur = 0;
+          if (
+            Math.hypot(c.x + 10 - (player.x + player.width / 2), c.y + 10 - (player.y + player.height / 2)) < 10 + player.width / 2
+          ) {
+            coins.splice(i, 1);
+            wallet++;
+            localStorage.setItem('bcpWallet', wallet);
+            if (soundOn) {
+              coinSound.currentTime = 0;
+              coinSound.play().catch(() => {});
+            }
+            updateHUD();
+          }
+          if (c.y > canvas.height) coins.splice(i, 1);
+        });
+      }
+
+      function updateLives() {
+        livesItems.forEach((l, i) => {
+          l.y += 2;
+          ctx.shadowColor = '#00ff00';
+          ctx.shadowBlur = 10;
+          ctx.drawImage(lifeImage, l.x, l.y, 20, 20);
+          ctx.shadowBlur = 0;
+          if (
+            Math.hypot(l.x + 10 - (player.x + player.width / 2), l.y + 10 - (player.y + player.height / 2)) < 10 + player.width / 2
+          ) {
+            livesItems.splice(i, 1);
+            lives++;
+            if (soundOn) {
+              lifeSound.currentTime = 0;
+              lifeSound.play().catch(() => {});
+            }
+            showLifeGained();
+            updateHUD();
+          }
+          if (l.y > canvas.height) livesItems.splice(i, 1);
+        });
+      }
+
+      function updateParticles() {
+        particles.forEach((p, i) => {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.life -= 16.67;
+          ctx.fillStyle = p.color;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fill();
+          if (p.life <= 0) particles.splice(i, 1);
+        });
+      }
+
+      function updateExplosions() {
+        explosions.forEach((e, i) => {
+          e.radius += 5;
+          e.life -= 16.67;
+          const gradient = ctx.createRadialGradient(e.x, e.y, 0, e.x, e.y, e.radius);
+          gradient.addColorStop(0, 'rgba(0, 255, 255, 0.8)');
+          gradient.addColorStop(1, 'rgba(0, 255, 255, 0)');
+          ctx.fillStyle = gradient;
+          ctx.beginPath();
+          ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2);
+          ctx.fill();
+          if (e.life <= 0) explosions.splice(i, 1);
+        });
+      }
+
+      function updateHUD() {
+        coinCounter.textContent = wallet;
+        scoreDisplay.textContent = score;
+        levelDisplay.textContent = level;
+        livesDisplay.textContent = lives;
+        finalScoreDisplay.textContent = score;
+        finalWalletDisplay.textContent = wallet;
+      }
+
+      function checkLevelUp() {
+        if (score >= level * 100) {
+          level++;
+          showLevelUp();
+          updateHUD();
+        }
+      }
+
+      function endGame() {
+        cancelAnimationFrame(animationId);
+        gameOverScreen.style.display = 'flex';
+        strongShootBtn.style.display = 'none';
+        if (score > highScore) {
+          highScore = score;
+          localStorage.setItem('highScore', highScore);
+        }
+        highScoreDisplay.textContent = highScore;
+        finalScoreDisplay.textContent = score;
+        finalWalletDisplay.textContent = wallet;
+      }
+
+      setInterval(spawnCoin, 3000);
+      setInterval(spawnLife, 10000);
+
+      spawnEnemyWave();
+    };
   </script>
 </body>
 </html>
